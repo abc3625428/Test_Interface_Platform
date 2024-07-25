@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>解封账号说明</title>
+  <style>
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .button {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: #fff;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .success {
+      color: green;
+    }
+
+    .failure {
+      color: red;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .module {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="container">
+    <h1>账号解封说明</h1>
+
+    <div class="module">
+      <h2>开源账号解封 http://10.30.9.13:8080/api/ky</h2>
+      <p>{{ module1Data }}</p>
+      <button class="button" @click="fetchModule1Data">发送请求</button>
+      <p v-if="module1Success" class="success">请求成功</p>
+      <p v-if="module1Failure" class="failure">请求失败</p>
+    </div>
+
+    <div class="module">
+      <h2>Module 2</h2>
+      <p>{{ module2Data }}</p>
+      <button class="button" @click="fetchModule1Data">发送请求</button>
+      <p v-if="module1Success" class="success">请求成功</p>
+      <p v-if="module1Failure" class="failure">请求失败</p>
+    </div>
+
+    <div class="module">
+      <h2>Module 3</h2>
+      <p>{{ module3Data }}</p>
+      <button class="button" @click="fetchModule1Data">发送请求</button>
+      <p v-if="module1Success" class="success">请求成功</p>
+      <p v-if="module1Failure" class="failure">请求失败</p>
+    </div>
+
+    <div class="module">
+      <h2>Module 4</h2>
+      <p>{{ module4Data }}</p>
+      <button class="button" @click="fetchModule1Data">发送请求</button>
+      <p v-if="module1Success" class="success">请求成功</p>
+      <p v-if="module1Failure" class="failure">请求失败</p>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    new Vue({
+      el: '#app',
+      data: {
+        module1Data: '',
+        module2Data: '',
+        module3Data: '',
+        module4Data: '',
+        module1Failure: false,
+        module1Success: false,
+      },
+      mounted() {
+        this.fetchModuleData();
+      },
+      methods: {
+        fetchModuleData() {
+          axios.get('http://10.30.9.13:8080/api/ky')
+            .then(response => {
+              this.module1Data = response.data;
+              this.module1Success = true;
+            })
+            .catch(error => {
+              console.error(error);
+              this.module1Failure = true;
+            })
+            .catch(error => {
+              console.error(error);
+            });
+
+          axios.get('http://10.30.9.13:8080/')
+            .then(response => {
+              this.module2Data = response.data;
+            })
+            .catch(error => {
+              console.error(error);
+            });
+
+          axios.get('http://10.30.9.13:8080/')
+            .then(response => {
+              this.module3Data = response.data;
+            })
+            .catch(error => {
+              console.error(error);
+            });
+
+          axios.get('module2.json')
+            .then(response => {
+              this.module4Data = response.data;
+            })
+            .catch(error => {
+              console.error(error);
+            });
+
+
+        }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>账号解封平台</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 10%;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+        }
+        .color{
+            background-color: #f5f5f5;
+        }
+            /* 设置表格的样式 */
+        .table-container {
+            width: 80%; /* 表格宽度为页面宽度的30% */
+            margin-top: 10%; /* 从页面顶部20%开始 */
+            text-align: center;
+            position: relative;
+            /*position: absolute; !* 使用绝对定位 *!*/
+            left: 10%; /* 居中位置，根据实际情况调整 */
+
+            /*right: 20%; !* 居中位置，根据实际情况调整 *!*/
+            overflow: hidden;
+            /*text-overflow: ellipsis;*/
+        }
+        .td {
+            max-width: 300px;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .td:hover{
+            overflow:visible;
+            white-space:normal ;
+            word-break:break-all
+        }
+        .column {
+            flex: 1;
+            text-align: center;
+        }
+        .link {
+            color: black;
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .link:hover {
+            background-color: blue;
+            color: white;
+        }
+        .content {
+            height: 90%;
+            background-image: url('https://img2.baidu.com/it/u=2755789160,2423709070&fm=253&fmt=auto&app=120&f=JPEG?w=1280&h=800');
+            background-size: cover;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            color: white;
+            padding-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="column">
+            <h1>账号解封平台</h1>
+        </div>
+
+        <div class="column">
+            <a href="10.30.9.13/8080/fs" class="link" onclick="showContent(1)">首页</a>
+        </div>
+
+        <div class="column">
+            <a  class="link" onclick="showContent(2)">账号展示 </a>
+        </div>
+
+        <div class="column">
+            <a href="url3" class="link">保留功能</a>
+        </div>
+
+        <div class="column">
+            <a href="url4" class="link">保留功能</a>
+        </div>
+
+    </div>
+
+    <table class="table-container"  border="1">
+        <thead>
+            <tr>
+                <th class="color">姓名</th>
+                <th class="color">电话</th>
+                <th class="color">id</th>
+                <th class="color">是否解封</th>
+                <th class="color">请求</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>王开源</td>
+                <td class="td">[12999993339,12933669932,12933669931,12990022231,12988881999,12999994448,12999996333,12999000999,12999993333,12990030237,12999993332,12990011221,12990033326,12933669902,12933669901,12999993334,12999993337,12999993336,12990033333,12990033339,12990066666,12999993335,12999993331]</td>
+                <td class="td">[29757,30625,10831,19369,6543,6543,65195,30927,30921,30919,4671,4249,21549,30799,30783,30773,29439,30551,30493,30513,30483,30481,30479,30477,30471,30419,30391,3683,5373,8937,13103,18413,18893,29769,1681,29965,29147,29441,29779,10845,7037,10273,19007,19271,23121,42987,30393,29753,42989,30899,3247]   </td>
+                <td>是</td>
+                <td><button id="myButton">请求解封</button></td>
+            </tr>
+            <tr>
+                <td>李四</td>
+                <td>30</td>
+                <td>上海</td>
+                <td>是</td>
+                <td><button onclick="sendGetRequest()">请求解封</button></td>
+            </tr>
+            <tr>
+                <td>王五</td>
+                <td>28</td>
+                <td>广州</td>
+                <td>是</td>
+                <td><button onclick="sendGetRequest()">请求解封</button></td>
+            </tr>
+        </tbody>
+    </table>
+<!--    <div id="content" class="content"></div>-->
+
+	<script>
+		 document.getElementById('myButton').addEventListener('click', function() {
+        var xhr = new XMLHttpRequest();
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                var response = xhr.responseText;
+                if(response === 'success') {
+                    alert('执行成功');
+                } else {
+                    alert('执行失败');
+                }
+            }
+            else {
+                alert('执行失败');
+            }
+        };
+
+        xhr.open('GET', 'http://10.30.9.13:8080/api/ky', true);
+        xhr.send();
+    });
+	</script>
+</body>
+</html>

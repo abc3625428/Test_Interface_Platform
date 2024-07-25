@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>前端页面</title>
+    <style>
+        /* 样式代码 */
+    </style>
+</head>
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>前端页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 20%;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        .column {
+            flex: 1;
+            text-align: center;
+        }
+        .link {
+            color: black;
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .link:hover {
+            background-color: blue;
+            color: white;
+        }
+        .content {
+            height: 80%;
+            background-color: #f8f8f8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+        }
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .data-cell {
+            flex: 1;
+        }
+        .request-btn {
+            background-color: #f5f5f5;
+            color: black;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .request-btn:hover {
+            background-color: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="column">
+            <h1>平台名</h1>
+        </div>
+        <div class="column">
+            <a href="#" class="link" onclick="changeColorAndSendRequest(1)">首页功能1</a>
+        </div>
+        <div class="column">
+            <a href="#" class="link" onclick="changeColorAndSendRequest(2)">功能2</a>
+        </div>
+        <div class="column">
+            <a href="#" class="link" onclick="changeColorAndSendRequest(3)">功能3</a>
+        </div>
+        <div class="column">
+            <a href="#" class="link" onclick="changeColorAndSendRequest(4)">功能4</a>
+        </div>
+    </div>
+    <div class="content">
+        <!-- 数据展示区域 -->
+    </div>
+    <script>
+        let requestData = []; // 用于存储请求返回的数据
+        function changeColorAndSendRequest(funcNum) {
+            const link = document.querySelector('.link'); // 获取当前点击的功能链接元素
+            link.style.backgroundColor = 'blue'; // 改变底色为蓝色
+            link.style.color = 'white'; // 改变字体颜色为白色
+            // 根据funcNum发送对应的请求，并将返回的数据存储到requestData数组中
+            // 以下为示例代码，需要根据实际情况进行修改和补充
+            fetch(`url/${funcNum}`)
+            // 使用fetch发送GET请求，根据实际接口情况进行修改和补充，将返回的数据存储到requestData数组中，示例代码：
+            response.json().then(data => requestData = data)
+            // 解析JSON数据并存储到requestData数组中，示例代码：})
+            .catch(error => console.log(error))
+            // 处理请求错误，示例代码：} // });
+            // 结束fetch请求，示例代码：}
+            // 根据返回数据的长度创建对应数量的数据表单行
+            for (let i = 0; i < requestData.length; i++) { const row = document.createElement('div');
+            row.className = 'data-row';
+            const nameCell = document.createElement('div');
+            nameCell.className = 'data-cell';
+            nameCell.textContent = requestData[i].name;
+            row.appendChild(nameCell);
+  </script>
+</body>
+</html>

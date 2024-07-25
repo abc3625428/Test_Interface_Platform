@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Test Report</title>
+    <style>body {
+	font-family: Helvetica, Arial, sans-serif;
+	font-size: 12px;
+	/* do not increase min-width as some may use split screens */
+	min-width: 800px;
+	color: #999;
+}
+
+h1 {
+	font-size: 24px;
+	color: black;
+}
+
+h2 {
+	font-size: 16px;
+	color: black;
+}
+
+p {
+    color: black;
+}
+
+a {
+	color: #999;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+/******************************
+ * SUMMARY INFORMATION
+ ******************************/
+
+#environment td {
+	padding: 5px;
+	border: 1px solid #E6E6E6;
+}
+
+#environment tr:nth-child(odd) {
+	background-color: #f6f6f6;
+}
+
+/******************************
+ * TEST RESULT COLORS
+ ******************************/
+span.passed, .passed .col-result {
+	color: green;
+}
+span.skipped, span.xfailed, span.rerun, .skipped .col-result, .xfailed .col-result, .rerun .col-result {
+	color: orange;
+}
+span.error, span.failed, span.xpassed, .error .col-result, .failed .col-result, .xpassed .col-result  {
+	color: red;
+}
+
+
+/******************************
+ * RESULTS TABLE
+ *
+ * 1. Table Layout
+ * 2. Extra
+ * 3. Sorting items
+ *
+ ******************************/
+
+/*------------------
+ * 1. Table Layout
+ *------------------*/
+
+#results-table {
+	border: 1px solid #e6e6e6;
+	color: #999;
+	font-size: 12px;
+	width: 100%
+}
+
+#results-table th, #results-table td {
+	padding: 5px;
+	border: 1px solid #E6E6E6;
+	text-align: left
+}
+#results-table th {
+	font-weight: bold
+}
+
+/*------------------
+ * 2. Extra
+ *------------------*/
+
+.log:only-child {
+	height: inherit
+}
+.log {
+	background-color: #e6e6e6;
+	border: 1px solid #e6e6e6;
+	color: black;
+	display: block;
+	font-family: "Courier New", Courier, monospace;
+	height: 230px;
+	overflow-y: scroll;
+	padding: 5px;
+	white-space: pre-wrap
+}
+div.image {
+	border: 1px solid #e6e6e6;
+	float: right;
+	height: 240px;
+	margin-left: 5px;
+	overflow: hidden;
+	width: 320px
+}
+div.image img {
+	width: 320px
+}
+div.video {
+	border: 1px solid #e6e6e6;
+	float: right;
+	height: 240px;
+	margin-left: 5px;
+	overflow: hidden;
+	width: 320px
+}
+div.video video {
+	overflow: hidden;
+	width: 320px;
+    height: 240px;
+}
+.collapsed {
+	display: none;
+}
+.expander::after {
+	content: " (show details)";
+	color: #BBB;
+	font-style: italic;
+	cursor: pointer;
+}
+.collapser::after {
+	content: " (hide details)";
+	color: #BBB;
+	font-style: italic;
+	cursor: pointer;
+}
+
+/*------------------
+ * 3. Sorting items
+ *------------------*/
+.sortable {
+	cursor: pointer;
+}
+
+.sort-icon {
+	font-size: 0px;
+	float: left;
+	margin-right: 5px;
+	margin-top: 5px;
+	/*triangle*/
+	width: 0;
+	height: 0;
+	border-left: 8px solid transparent;
+	border-right: 8px solid transparent;
+}
+
+.inactive .sort-icon {
+	/*finish triangle*/
+	border-top: 8px solid #E6E6E6;
+}
+
+.asc.active .sort-icon {
+	/*finish triangle*/
+	border-bottom: 8px solid #999;
+}
+
+.desc.active .sort-icon {
+	/*finish triangle*/
+	border-top: 8px solid #999;
+}
+</style></head>
+  <body onLoad="init()">
+    <script>/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+function toArray(iter) {
+    if (iter === null) {
+        return null;
+    }
+    return Array.prototype.slice.call(iter);
+}
+
+function find(selector, elem) {
+    if (!elem) {
+        elem = document;
+    }
+    return elem.querySelector(selector);
+}
+
+function find_all(selector, elem) {
+    if (!elem) {
+        elem = document;
+    }
+    return toArray(elem.querySelectorAll(selector));
+}
+
+function sort_column(elem) {
+    toggle_sort_states(elem);
+    var colIndex = toArray(elem.parentNode.childNodes).indexOf(elem);
+    var key;
+    if (elem.classList.contains('numeric')) {
+        key = key_num;
+    } else if (elem.classList.contains('result')) {
+        key = key_result;
+    } else {
+        key = key_alpha;
+    }
+    sort_table(elem, key(colIndex));
+}
+
+function show_all_extras() {
+    find_all('.col-result').forEach(show_extras);
+}
+
+function hide_all_extras() {
+    find_all('.col-result').forEach(hide_extras);
+}
+
+function show_extras(colresult_elem) {
+    var extras = colresult_elem.parentNode.nextElementSibling;
+    var expandcollapse = colresult_elem.firstElementChild;
+    extras.classList.remove("collapsed");
+    expandcollapse.classList.remove("expander");
+    expandcollapse.classList.add("collapser");
+}
+
+function hide_extras(colresult_elem) {
+    var extras = colresult_elem.parentNode.nextElementSibling;
+    var expandcollapse = colresult_elem.firstElementChild;
+    extras.classList.add("collapsed");
+    expandcollapse.classList.remove("collapser");
+    expandcollapse.classList.add("expander");
+}
+
+function show_filters() {
+    var filter_items = document.getElementsByClassName('filter');
+    for (var i = 0; i < filter_items.length; i++)
+        filter_items[i].hidden = false;
+}
+
+function add_collapse() {
+    // Add links for show/hide all
+    var resulttable = find('table#results-table');
+    var showhideall = document.createElement("p");
+    showhideall.innerHTML = '<a href="javascript:show_all_extras()">Show all details</a> / ' +
+                            '<a href="javascript:hide_all_extras()">Hide all details</a>';
+    resulttable.parentElement.insertBefore(showhideall, resulttable);
+
+    // Add show/hide link to each result
+    find_all('.col-result').forEach(function(elem) {
+        var collapsed = get_query_parameter('collapsed') || 'Passed';
+        var extras = elem.parentNode.nextElementSibling;
+        var expandcollapse = document.createElement("span");
+        if (extras.classList.contains("collapsed")) {
+            expandcollapse.classList.add("expander")
+        } else if (collapsed.includes(elem.innerHTML)) {
+            extras.classList.add("collapsed");
+            expandcollapse.classList.add("expander");
+        } else {
+            expandcollapse.classList.add("collapser");
+        }
+        elem.appendChild(expandcollapse);
+
+        elem.addEventListener("click", function(event) {
+            if (event.currentTarget.parentNode.nextElementSibling.classList.contains("collapsed")) {
+                show_extras(event.currentTarget);
+            } else {
+                hide_extras(event.currentTarget);
+            }
+        });
+    })
+}
+
+function get_query_parameter(name) {
+    var match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+    return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+}
+
+function init () {
+    reset_sort_headers();
+
+    add_collapse();
+
+    show_filters();
+
+    sort_column(find('.initial-sort'));
+
+    find_all('.sortable').forEach(function(elem) {
+        elem.addEventListener("click",
+                              function(event) {
+                                  sort_column(elem);
+                              }, false)
+    });
+
+};
+
+function sort_table(clicked, key_func) {
+    var rows = find_all('.results-table-row');
+    var reversed = !clicked.classList.contains('asc');
+    var sorted_rows = sort(rows, key_func, reversed);
+    /* Whole table is removed here because browsers acts much slower
+     * when appending existing elements.
+     */
+    var thead = document.getElementById("results-table-head");
+    document.getElementById('results-table').remove();
+    var parent = document.createElement("table");
+    parent.id = "results-table";
+    parent.appendChild(thead);
+    sorted_rows.forEach(function(elem) {
+        parent.appendChild(elem);
+    });
+    document.getElementsByTagName("BODY")[0].appendChild(parent);
+}
+
+function sort(items, key_func, reversed) {
+    var sort_array = items.map(function(item, i) {
+        return [key_func(item), i];
+    });
+
+    sort_array.sort(function(a, b) {
+        var key_a = a[0];
+        var key_b = b[0];
+
+        if (key_a == key_b) return 0;
+
+        if (reversed) {
+            return (key_a < key_b ? 1 : -1);
+        } else {
+            return (key_a > key_b ? 1 : -1);
+        }
+    });
+
+    return sort_array.map(function(item) {
+        var index = item[1];
+        return items[index];
+    });
+}
+
+function key_alpha(col_index) {
+    return function(elem) {
+        return elem.childNodes[1].childNodes[col_index].firstChild.data.toLowerCase();
+    };
+}
+
+function key_num(col_index) {
+    return function(elem) {
+        return parseFloat(elem.childNodes[1].childNodes[col_index].firstChild.data);
+    };
+}
+
+function key_result(col_index) {
+    return function(elem) {
+        var strings = ['Error', 'Failed', 'Rerun', 'XFailed', 'XPassed',
+                       'Skipped', 'Passed'];
+        return strings.indexOf(elem.childNodes[1].childNodes[col_index].firstChild.data);
+    };
+}
+
+function reset_sort_headers() {
+    find_all('.sort-icon').forEach(function(elem) {
+        elem.parentNode.removeChild(elem);
+    });
+    find_all('.sortable').forEach(function(elem) {
+        var icon = document.createElement("div");
+        icon.className = "sort-icon";
+        icon.textContent = "vvv";
+        elem.insertBefore(icon, elem.firstChild);
+        elem.classList.remove("desc", "active");
+        elem.classList.add("asc", "inactive");
+    });
+}
+
+function toggle_sort_states(elem) {
+    //if active, toggle between asc and desc
+    if (elem.classList.contains('active')) {
+        elem.classList.toggle('asc');
+        elem.classList.toggle('desc');
+    }
+
+    //if inactive, reset all other functions and add ascending active
+    if (elem.classList.contains('inactive')) {
+        reset_sort_headers();
+        elem.classList.remove('inactive');
+        elem.classList.add('active');
+    }
+}
+
+function is_all_rows_hidden(value) {
+  return value.hidden == false;
+}
+
+function filter_table(elem) {
+    var outcome_att = "data-test-result";
+    var outcome = elem.getAttribute(outcome_att);
+    class_outcome = outcome + " results-table-row";
+    var outcome_rows = document.getElementsByClassName(class_outcome);
+
+    for(var i = 0; i < outcome_rows.length; i++){
+        outcome_rows[i].hidden = !elem.checked;
+    }
+
+    var rows = find_all('.results-table-row').filter(is_all_rows_hidden);
+    var all_rows_hidden = rows.length == 0 ? true : false;
+    var not_found_message = document.getElementById("not-found-message");
+    not_found_message.hidden = !all_rows_hidden;
+}
+</script>
+    <h1>2023-12-27-19-49-44.html</h1>
+    <p>Report generated on 27-Dec-2023 at 19:49:58 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a> v2.1.1</p>
+    <h2>Summary</h2>
+    <p>60 tests ran in 12.74 seconds. </p>
+    <p class="filter" hidden="true">(Un)check the boxes to filter the results.</p><input checked="true" class="filter" data-test-result="passed" hidden="true" name="filter_checkbox" onChange="filter_table(this)" type="checkbox"/><span class="passed">53 passed</span>, <input checked="true" class="filter" data-test-result="skipped" disabled="true" hidden="true" name="filter_checkbox" onChange="filter_table(this)" type="checkbox"/><span class="skipped">0 skipped</span>, <input checked="true" class="filter" data-test-result="failed" hidden="true" name="filter_checkbox" onChange="filter_table(this)" type="checkbox"/><span class="failed">7 failed</span>, <input checked="true" class="filter" data-test-result="error" disabled="true" hidden="true" name="filter_checkbox" onChange="filter_table(this)" type="checkbox"/><span class="error">0 errors</span>, <input checked="true" class="filter" data-test-result="xfailed" disabled="true" hidden="true" name="filter_checkbox" onChange="filter_table(this)" type="checkbox"/><span class="xfailed">0 expected failures</span>, <input checked="true" class="filter" data-test-result="xpassed" disabled="true" hidden="true" name="filter_checkbox" onChange="filter_table(this)" type="checkbox"/><span class="xpassed">0 unexpected passes</span>
+    <h2>Results</h2>
+    <table id="results-table">
+      <thead id="results-table-head">
+        <tr>
+          <th class="sortable result initial-sort" col="result">Result</th>
+          <th class="sortable" col="name">Test</th>
+          <th class="sortable numeric" col="duration">Duration</th>
+          <th>Links</th></tr>
+        <tr hidden="true" id="not-found-message">
+          <th colspan="4">No results found. Try to check the filters</th></tr></thead>
+      <tbody class="failed results-table-row">
+        <tr>
+          <td class="col-result">Failed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[工程监理-title-监理]</td>
+          <td class="col-duration">0.18</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">self = &lt;test_case.test_aig_cpc.aig_cpc_search_loggedout.Test_aig_cpc_search_logginout object at 0x000001FC30AA49D0&gt;<br/>ke = &#x27;工程监理&#x27;, key = &#x27;title&#x27;, target = &#x27;监理&#x27;<br/><br/>    @pytest.mark.parametrize(&#x27;ke,key,target&#x27;, paramter_ke)<br/>    def test_cpc_search_word_list_ke(self, ke, key, target):<br/>        res = aig_cpc_search_loginout(ke=ke)<br/>        li = aig_get_target_value(res, key)<br/>        print(li)<br/>    <br/>        no_target = [i for i in li if all(j not in i for j in target)]<br/>&gt;       assert len(no_target)&lt; 4, f&quot;断言失败：召回职位={no_target}&quot;<br/><span class="error">E       AssertionError: 断言失败：召回职位=[&#x27;全过程工程总咨询师&#x27;, &#x27;勘察设计&#x27;, &#x27;地质工程专技人员&#x27;, &#x27;环境工程专业技术人员&#x27;, &#x27;注册岩土工程师&#x27;, &#x27;电力工程负责人&#x27;, &#x27;区域事业合伙人&#x27;, &#x27;建筑总工程师&#x27;, &#x27;安装工程师&#x27;, &#x27;造价工程师（公路）&#x27;, &#x27;市政造价工程师（专业负责人）&#x27;]</span><br/><span class="error">E       assert 11 &lt; 4</span><br/><span class="error">E        +  where 11 = len([&#x27;全过程工程总咨询师&#x27;, &#x27;勘察设计&#x27;, &#x27;地质工程专技人员&#x27;, &#x27;环境工程专业技术人员&#x27;, &#x27;注册岩土工程师&#x27;, &#x27;电力工程负责人&#x27;, ...])</span><br/><br/>aig_cpc_search_loggedout.py:114: AssertionError<br/></div></td></tr></tbody>
+      <tbody class="failed results-table-row">
+        <tr>
+          <td class="col-result">Failed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[自然语言处理-title-target18]</td>
+          <td class="col-duration">0.20</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">self = &lt;test_case.test_aig_cpc.aig_cpc_search_loggedout.Test_aig_cpc_search_logginout object at 0x000001FC30AA4670&gt;<br/>ke = &#x27;自然语言处理&#x27;, key = &#x27;title&#x27;, target = [&#x27;语言&#x27;, &#x27;NLP&#x27;, &#x27;大模型&#x27;, &#x27;人工智能&#x27;]<br/><br/>    @pytest.mark.parametrize(&#x27;ke,key,target&#x27;, paramter_ke)<br/>    def test_cpc_search_word_list_ke(self, ke, key, target):<br/>        res = aig_cpc_search_loginout(ke=ke)<br/>        li = aig_get_target_value(res, key)<br/>        print(li)<br/>    <br/>        no_target = [i for i in li if all(j not in i for j in target)]<br/>&gt;       assert len(no_target)&lt; 4, f&quot;断言失败：召回职位={no_target}&quot;<br/><span class="error">E       AssertionError: 断言失败：召回职位=[&#x27;高级算法工程师&#x27;, &#x27;Python开发工程师&#x27;, &#x27;zy3027-AI应用开发工程师&#x27;, &#x27;语音算法工程师&#x27;, &#x27;语音算法工程师&#x27;, &#x27;数据标注专员（印尼语方向）&#x27;, &#x27;计算机图形算法工程师&#x27;, &#x27;文本模型训练师&#x27;, &#x27;推荐算法工程师&#x27;, &#x27;算法工程师&#x27;, &#x27;文本模型训练师&#x27;, &#x27;不加班的推荐算法&#x27;, &#x27;算法工程师&#x27;, &#x27;智能制造工程师&#x27;, &#x27;风控引擎模型开发工程师&#x27;, &#x27;算法工程师&#x27;, &#x27;安驿公司-标注项目经理(J18941)&#x27;, &#x27;指挥控制算法&#x27;, &#x27;算法工程师&#x27;, &#x27;算法工程师&#x27;, &#x27;算法工程师&#x27;, &#x27;算法工程师&#x27;, &#x27;算法工程师&#x27;, &#x27;文本模型训练师&#x27;, &#x27;资深openGL开发工程师&#x27;, &#x27;后台服务开发工程师&#x27;, &#x27;大数据开发工程师&#x27;, &#x27;图像算法工程师&#x27;, &#x27;AI算法工程师&#x27;, &#x27;java高级工程师&#x27;, &#x27;图像算法工程师&#x27;, &#x27;算法工程师&#x27;]</span><br/><span class="error">E       assert 32 &lt; 4</span><br/><span class="error">E        +  where 32 = len([&#x27;高级算法工程师&#x27;, &#x27;Python开发工程师&#x27;, &#x27;zy3027-AI应用开发工程师&#x27;, &#x27;语音算法工程师&#x27;, &#x27;语音算法工程师&#x27;, &#x27;数据标注专员（印尼语方向）&#x27;, ...])</span><br/><br/>aig_cpc_search_loggedout.py:114: AssertionError<br/></div></td></tr></tbody>
+      <tbody class="failed results-table-row">
+        <tr>
+          <td class="col-result">Failed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[环保工程师-title-target21]</td>
+          <td class="col-duration">0.19</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">self = &lt;test_case.test_aig_cpc.aig_cpc_search_loggedout.Test_aig_cpc_search_logginout object at 0x000001FC30ABC100&gt;<br/>ke = &#x27;环保工程师&#x27;, key = &#x27;title&#x27;, target = [&#x27;环保&#x27;, &#x27;污&#x27;, &#x27;修复&#x27;]<br/><br/>    @pytest.mark.parametrize(&#x27;ke,key,target&#x27;, paramter_ke)<br/>    def test_cpc_search_word_list_ke(self, ke, key, target):<br/>        res = aig_cpc_search_loginout(ke=ke)<br/>        li = aig_get_target_value(res, key)<br/>        print(li)<br/>    <br/>        no_target = [i for i in li if all(j not in i for j in target)]<br/>&gt;       assert len(no_target)&lt; 4, f&quot;断言失败：召回职位={no_target}&quot;<br/><span class="error">E       AssertionError: 断言失败：召回职位=[&#x27;EHS总监&#x27;, &#x27;安全工程师&#x27;, &#x27;流域运营经理&#x27;, &#x27;环卫运营经理（管理类）&#x27;, &#x27;运营技术经理&#x27;, &#x27;水土保持工程师&#x27;, &#x27;环境工程师&#x27;, &#x27;大气除尘、脱硫、脱销工艺设计工程师&#x27;, &#x27;市政给排水工程师&#x27;]</span><br/><span class="error">E       assert 9 &lt; 4</span><br/><span class="error">E        +  where 9 = len([&#x27;EHS总监&#x27;, &#x27;安全工程师&#x27;, &#x27;流域运营经理&#x27;, &#x27;环卫运营经理（管理类）&#x27;, &#x27;运营技术经理&#x27;, &#x27;水土保持工程师&#x27;, ...])</span><br/><br/>aig_cpc_search_loggedout.py:114: AssertionError<br/></div></td></tr></tbody>
+      <tbody class="failed results-table-row">
+        <tr>
+          <td class="col-result">Failed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[数据标注-title-target23]</td>
+          <td class="col-duration">0.17</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">self = &lt;test_case.test_aig_cpc.aig_cpc_search_loggedout.Test_aig_cpc_search_logginout object at 0x000001FC30ABC580&gt;<br/>ke = &#x27;数据标注&#x27;, key = &#x27;title&#x27;, target = [&#x27;数据&#x27;, &#x27;标注&#x27;]<br/><br/>    @pytest.mark.parametrize(&#x27;ke,key,target&#x27;, paramter_ke)<br/>    def test_cpc_search_word_list_ke(self, ke, key, target):<br/>        res = aig_cpc_search_loginout(ke=ke)<br/>        li = aig_get_target_value(res, key)<br/>        print(li)<br/>    <br/>        no_target = [i for i in li if all(j not in i for j in target)]<br/>&gt;       assert len(no_target)&lt; 4, f&quot;断言失败：召回职位={no_target}&quot;<br/><span class="error">E       AssertionError: 断言失败：召回职位=[&#x27;资源管理（ER）&#x27;, &#x27;智能汽车-产品经理&#x27;, &#x27;产品经理&#x27;, &#x27;高级产品经理&#x27;, &#x27;文本模型训练师&#x27;, &#x27;地图采集测试工程师&#x27;, &#x27;视图模型运营（算法方向）&#x27;, &#x27;地图测试开发工程师&#x27;, &#x27;安驿公司-产品经理(J19265)&#x27;, &#x27;运营&#x27;, &#x27;人工智能算法工程师&#x27;, &#x27;产品舆情监测专员&#x27;, &#x27;人工智能开发工程师&#x27;, &#x27;Java&#x27;, &#x27;LLM大模型预训练算法专家&#x27;, &#x27;智能驾驶算法工程师&#x27;, &#x27;智能驾驶算法工程师&#x27;, &#x27;智能驾驶算法工程师&#x27;]</span><br/><span class="error">E       assert 18 &lt; 4</span><br/><span class="error">E        +  where 18 = len([&#x27;资源管理（ER）&#x27;, &#x27;智能汽车-产品经理&#x27;, &#x27;产品经理&#x27;, &#x27;高级产品经理&#x27;, &#x27;文本模型训练师&#x27;, &#x27;地图采集测试工程师&#x27;, ...])</span><br/><br/>aig_cpc_search_loggedout.py:114: AssertionError<br/></div></td></tr></tbody>
+      <tbody class="failed results-table-row">
+        <tr>
+          <td class="col-result">Failed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[Python-title-target24]</td>
+          <td class="col-duration">0.24</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">self = &lt;test_case.test_aig_cpc.aig_cpc_search_loggedout.Test_aig_cpc_search_logginout object at 0x000001FC30ABC4F0&gt;<br/>ke = &#x27;Python&#x27;, key = &#x27;title&#x27;, target = [&#x27;Python&#x27;, &#x27;thon&#x27;, &#x27;后端&#x27;]<br/><br/>    @pytest.mark.parametrize(&#x27;ke,key,target&#x27;, paramter_ke)<br/>    def test_cpc_search_word_list_ke(self, ke, key, target):<br/>        res = aig_cpc_search_loginout(ke=ke)<br/>        li = aig_get_target_value(res, key)<br/>        print(li)<br/>    <br/>        no_target = [i for i in li if all(j not in i for j in target)]<br/>&gt;       assert len(no_target)&lt; 4, f&quot;断言失败：召回职位={no_target}&quot;<br/><span class="error">E       AssertionError: 断言失败：召回职位=[&#x27;数据分析师&#x27;, &#x27;大数据研发工程师&#x27;, &#x27;智能制造开发工程师&#x27;, &#x27;软件工程师&#x27;, &#x27;Java&#x27;, &#x27;前瞻测试技术开发&#x27;, &#x27;数据运营工程师&#x27;, &#x27;PEX Engineer（精益工程师数据分析方向）&#x27;]</span><br/><span class="error">E       assert 8 &lt; 4</span><br/><span class="error">E        +  where 8 = len([&#x27;数据分析师&#x27;, &#x27;大数据研发工程师&#x27;, &#x27;智能制造开发工程师&#x27;, &#x27;软件工程师&#x27;, &#x27;Java&#x27;, &#x27;前瞻测试技术开发&#x27;, ...])</span><br/><br/>aig_cpc_search_loggedout.py:114: AssertionError<br/></div></td></tr></tbody>
+      <tbody class="failed results-table-row">
+        <tr>
+          <td class="col-result">Failed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[深度学习-title-target25]</td>
+          <td class="col-duration">0.17</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">self = &lt;test_case.test_aig_cpc.aig_cpc_search_loggedout.Test_aig_cpc_search_logginout object at 0x000001FC30ABC460&gt;<br/>ke = &#x27;深度学习&#x27;, key = &#x27;title&#x27;, target = [&#x27;深度&#x27;, &#x27;机械&#x27;, &#x27;算法&#x27;]<br/><br/>    @pytest.mark.parametrize(&#x27;ke,key,target&#x27;, paramter_ke)<br/>    def test_cpc_search_word_list_ke(self, ke, key, target):<br/>        res = aig_cpc_search_loginout(ke=ke)<br/>        li = aig_get_target_value(res, key)<br/>        print(li)<br/>    <br/>        no_target = [i for i in li if all(j not in i for j in target)]<br/>&gt;       assert len(no_target)&lt; 4, f&quot;断言失败：召回职位={no_target}&quot;<br/><span class="error">E       AssertionError: 断言失败：召回职位=[&#x27;人工智能开发工程师&#x27;, &#x27;行为/轨迹预测工程师&#x27;, &#x27;大数据应用专家&#x27;, &#x27;研发工程师&#x27;, &#x27;人工智能工程师&#x27;, &#x27;技术经理&#x27;, &#x27;C++工程师（机器视觉、国企）&#x27;, &#x27;大数据应用专家 （人工智能方向）&#x27;]</span><br/><span class="error">E       assert 8 &lt; 4</span><br/><span class="error">E        +  where 8 = len([&#x27;人工智能开发工程师&#x27;, &#x27;行为/轨迹预测工程师&#x27;, &#x27;大数据应用专家&#x27;, &#x27;研发工程师&#x27;, &#x27;人工智能工程师&#x27;, &#x27;技术经理&#x27;, ...])</span><br/><br/>aig_cpc_search_loggedout.py:114: AssertionError<br/></div></td></tr></tbody>
+      <tbody class="failed results-table-row">
+        <tr>
+          <td class="col-result">Failed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[工艺制程工程师-title-target30]</td>
+          <td class="col-duration">0.15</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">self = &lt;test_case.test_aig_cpc.aig_cpc_search_loggedout.Test_aig_cpc_search_logginout object at 0x000001FC30ABC400&gt;<br/>ke = &#x27;工艺制程工程师&#x27;, key = &#x27;title&#x27;, target = [&#x27;工艺&#x27;, &#x27;制程&#x27;]<br/><br/>    @pytest.mark.parametrize(&#x27;ke,key,target&#x27;, paramter_ke)<br/>    def test_cpc_search_word_list_ke(self, ke, key, target):<br/>        res = aig_cpc_search_loginout(ke=ke)<br/>        li = aig_get_target_value(res, key)<br/>        print(li)<br/>    <br/>        no_target = [i for i in li if all(j not in i for j in target)]<br/>&gt;       assert len(no_target)&lt; 4, f&quot;断言失败：召回职位={no_target}&quot;<br/><span class="error">E       AssertionError: 断言失败：召回职位=[&#x27;先期制造工程师-发泡&#x27;, &#x27;Forming Process Engineer&#x27;, &#x27;技术规划工程师&#x27;, &#x27;NPI工程师/专家&#x27;, &#x27;制造业务（MBO工程师） (MJ003550)&#x27;, &#x27;产品整合岗（PE）(J37726)&#x27;, &#x27;先期制造工程师&#x27;, &#x27;电控工厂副部长&#x27;, &#x27;Batch Process Engineer&#x27;, &#x27;储备工程师（央企全球top汽配制造）&#x27;]</span><br/><span class="error">E       assert 10 &lt; 4</span><br/><span class="error">E        +  where 10 = len([&#x27;先期制造工程师-发泡&#x27;, &#x27;Forming Process Engineer&#x27;, &#x27;技术规划工程师&#x27;, &#x27;NPI工程师/专家&#x27;, &#x27;制造业务（MBO工程师） (MJ003550)&#x27;, &#x27;产品整合岗（PE）(J37726)&#x27;, ...])</span><br/><br/>aig_cpc_search_loggedout.py:114: AssertionError<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_eduLevel[040-requireEduLevel-本科]</td>
+          <td class="col-duration">0.26</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_eduLevel[030-requireEduLevel-硕士]</td>
+          <td class="col-duration">0.19</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_eduLevel[020-requireEduLevel-MBA/EMBA]</td>
+          <td class="col-duration">0.12</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_eduLevel[010-requireEduLevel-博士]</td>
+          <td class="col-duration">0.17</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_eduLevel[050-requireEduLevel-大专]</td>
+          <td class="col-duration">0.26</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_eduLevel[060-requireEduLevel-中专/中技]</td>
+          <td class="col-duration">0.22</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_eduLevel[080-requireEduLevel-高中]</td>
+          <td class="col-duration">0.16</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_eduLevel[090-requireEduLevel-初中]</td>
+          <td class="col-duration">0.14</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_dp[010-dq-北京]</td>
+          <td class="col-duration">0.21</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_dp[020-dq-上海]</td>
+          <td class="col-duration">0.20</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_dp[030-dq-天津]</td>
+          <td class="col-duration">0.19</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_dp[040-dq-重庆]</td>
+          <td class="col-duration">0.13</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_dp[050020-dq-广州]</td>
+          <td class="col-duration">0.22</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_dp[050090-dq-深圳]</td>
+          <td class="col-duration">0.24</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_dp[060080-dq-苏州]</td>
+          <td class="col-duration">0.24</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_dp[060020-dq-南京]</td>
+          <td class="col-duration">0.19</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_dp[070020-dq-杭州]</td>
+          <td class="col-duration">0.24</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_dp[210040-dq-大连]</td>
+          <td class="col-duration">0.21</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_dp[280020-dq-成都]</td>
+          <td class="col-duration">0.23</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_dp[170020-dq-武汉]</td>
+          <td class="col-duration">0.22</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_dp[270020-dq-西安]</td>
+          <td class="col-duration">0.22</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_dp[260050-dq-运城]</td>
+          <td class="col-duration">0.16</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_dp[250070-dq-青岛]</td>
+          <td class="col-duration">0.19</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_dp[310020-dq-昆明]</td>
+          <td class="col-duration">0.23</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_dp[250100-dq-威海]</td>
+          <td class="col-duration">0.21</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[产品经理-title-产品]</td>
+          <td class="col-duration">0.40</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[java-title-target1]</td>
+          <td class="col-duration">0.31</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[测试-title-测试]</td>
+          <td class="col-duration">0.24</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[运营-title-运营]</td>
+          <td class="col-duration">0.24</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[销售-title-销售]</td>
+          <td class="col-duration">0.27</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[前端-title-前端]</td>
+          <td class="col-duration">0.21</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[机械师-title-机械]</td>
+          <td class="col-duration">0.09</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[项目经理-title-target7]</td>
+          <td class="col-duration">0.34</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[新媒体-title-新媒体]</td>
+          <td class="col-duration">0.22</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[医疗-title-医疗]</td>
+          <td class="col-duration">0.22</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[教师-title-target11]</td>
+          <td class="col-duration">0.23</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[培训师-title-培训]</td>
+          <td class="col-duration">0.20</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[美容师-title-美容]</td>
+          <td class="col-duration">0.17</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[讲师-title-讲师]</td>
+          <td class="col-duration">0.20</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[安保人员-title-安保]</td>
+          <td class="col-duration">0.10</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[助理-title-助理]</td>
+          <td class="col-duration">0.28</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[算法工程师-title-算法]</td>
+          <td class="col-duration">0.24</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[视觉设计-title-视觉设计]</td>
+          <td class="col-duration">0.20</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[材料工程师-title-材料]</td>
+          <td class="col-duration">0.19</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[政府关系-title-target22]</td>
+          <td class="col-duration">0.18</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[电池工程师-title-电池]</td>
+          <td class="col-duration">0.20</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[电气工程师-title-电气]</td>
+          <td class="col-duration">0.19</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[生产计划-title-target28]</td>
+          <td class="col-duration">0.20</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[光伏技术工程师-title-target29]</td>
+          <td class="col-duration">0.16</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[总经理-title-target31]</td>
+          <td class="col-duration">0.15</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[总监-title-target32]</td>
+          <td class="col-duration">0.13</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[秘书-title-target33]</td>
+          <td class="col-duration">0.15</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">aig_cpc_search_loggedout.py::Test_aig_cpc_search_logginout::test_cpc_search_word_list_ke[设计师-title-target34]</td>
+          <td class="col-duration">0.39</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody></table></body></html>
