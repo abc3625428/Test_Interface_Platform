@@ -49,6 +49,16 @@ class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True,autoincrement=True)
     name = db.Column(db.String(50))
 
+class Menus(db.Model):
+
+    __tablename__ = 'new_menus'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    is_active = db.Column(db.Integer, default=1)
+    master = db.Column(db.String(2000))
+    explain = db.Column(db.String(45))
+
+
 
     # @declared_attr
     # def username_hash(cls):
