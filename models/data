@@ -1,0 +1,136 @@
+CREATE TABLE `user_basic` (
+   `id` int(11) NOT NULL AUTO_INCREMENT,
+   `user_name` varchar(50) DEFAULT NULL,
+   `mobile` bigint(20) DEFAULT NULL,
+   `password` int(11) DEFAULT NULL,
+   `avatar` varchar(100) DEFAULT NULL,
+   `belonging_role` varchar(100) DEFAULT NULL,
+   `status` int(11) DEFAULT NULL,
+   `username` varchar(45) DEFAULT NULL,
+   `is_admin` varchar(45) DEFAULT NULL,
+   `is_verified` varchar(45) DEFAULT NULL,
+   `creation_time` varchar(45) DEFAULT NULL,
+   `modification_time` varchar(45) DEFAULT NULL,
+   `info_id` int(11) DEFAULT NULL,
+   `menus_id` int(11) DEFAULT NULL,
+   PRIMARY KEY (`id`)
+ ) ENGINE=InnoDB AUTO_INCREMENT=73 DEFAULT CHARSET=utf8
+
+CREATE TABLE `user_info` (
+   `id` int(11) NOT NULL,
+   `username` varchar(45) DEFAULT NULL,
+   PRIMARY KEY (`id`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8
+
+CREATE TABLE `user_account_info` (
+   `id` int(11) NOT NULL AUTO_INCREMENT,
+   `user_id` int(11) DEFAULT NULL,
+   `phone` bigint(20) DEFAULT NULL,
+   `email` varchar(50) DEFAULT NULL,
+   `account` int(11) DEFAULT NULL,
+   `create_time` datetime DEFAULT NULL,
+   `user_name` varchar(50) DEFAULT NULL,
+   `password` varchar(100) DEFAULT NULL,
+   `avatar` varchar(100) DEFAULT NULL,
+   `belonging_role` varchar(45) DEFAULT NULL,
+   `user_tatus` int(11) DEFAULT NULL,
+   PRIMARY KEY (`id`)
+ ) ENGINE=InnoDB AUTO_INCREMENT=73 DEFAULT CHARSET=utf8
+
+CREATE TABLE `test_data_table` (
+   `id` int(11) NOT NULL,
+   `launch_status_failed` int(11) DEFAULT NULL,
+   `launch_status_broken` int(11) DEFAULT NULL,
+   `launch_status_passed` int(11) DEFAULT NULL,
+   `launch_status_skipped` int(11) DEFAULT NULL,
+   `launch_status_unknown` int(11) DEFAULT NULL,
+   `launch_time_duration` int(11) DEFAULT NULL,
+   `launch_time_min_duration` int(11) DEFAULT NULL,
+   `launch_time_max_duration` int(11) DEFAULT NULL,
+   `launch_time_sum_duration` int(11) DEFAULT NULL,
+   `launch_retries_retries` int(11) DEFAULT NULL,
+   `launch_retries_run` int(11) DEFAULT NULL,
+   `date` varchar(45) DEFAULT NULL,
+   `a` varchar(45) DEFAULT NULL,
+   `b` varchar(45) DEFAULT NULL,
+   `c` varchar(45) DEFAULT NULL,
+   `d` varchar(45) DEFAULT NULL,
+   `e` varchar(45) DEFAULT NULL,
+   PRIMARY KEY (`id`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8
+
+CREATE TABLE `schedule_task` (
+   `id` int(11) NOT NULL AUTO_INCREMENT,
+   `func` varchar(50) DEFAULT NULL,
+   `args` int(11) DEFAULT NULL,
+   `trigger` varchar(50) DEFAULT NULL,
+   `month` int(11) DEFAULT NULL,
+   `day` varchar(50) DEFAULT NULL,
+   `hour` varchar(50) DEFAULT NULL,
+   `minute` varchar(50) DEFAULT NULL,
+   `second` varchar(50) DEFAULT NULL,
+   `create_time` datetime DEFAULT NULL,
+   `updata_time` datetime DEFAULT NULL,
+   PRIMARY KEY (`id`)
+ ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8
+
+CREATE TABLE `role` (
+   `id` int(11) NOT NULL,
+   `name` varchar(45) DEFAULT NULL,
+   PRIMARY KEY (`id`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8
+
+
+CREATE TABLE `pickture` (
+   `id` int(11) NOT NULL,
+   `pickture_class_name` varchar(45) DEFAULT NULL,
+   `class_id` int(11) DEFAULT NULL,
+   `url` varchar(100) DEFAULT NULL,
+   `pickture_name` varchar(45) DEFAULT NULL,
+   `image` mediumblob,
+   `time` datetime DEFAULT NULL,
+   PRIMARY KEY (`id`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8
+
+CREATE TABLE `pickture_class` (
+   `id` int(11) NOT NULL,
+   `name` varchar(45) DEFAULT NULL,
+   `pickture_classcol` varchar(45) DEFAULT NULL,
+   `time` datetime DEFAULT NULL,
+   PRIMARY KEY (`id`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8
+
+CREATE TABLE `new_meuns` (
+   `id` int(11) NOT NULL,
+   `is_active` int(11) DEFAULT NULL,
+   `master` varchar(2000) DEFAULT NULL,
+   `explain` varchar(45) DEFAULT NULL,
+   PRIMARY KEY (`id`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8
+
+CREATE TABLE `new_promissory` (
+   `id` int(11) NOT NULL,
+   `user_name` varchar(45) DEFAULT NULL,
+   `user_avatar` varchar(45) DEFAULT NULL,
+   `user_time` varchar(45) DEFAULT NULL,
+   `ruleNames` varchar(45) DEFAULT NULL,
+   `menus` varchar(500) DEFAULT NULL,
+   PRIMARY KEY (`id`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8
+
+CREATE TABLE `interface_auto_report` (
+   `id` int(11) NOT NULL,
+   `report_id` int(11) DEFAULT NULL,
+   `report_all` varchar(10) DEFAULT NULL,
+   `report_pass` varchar(10) DEFAULT NULL,
+   `report_fail` varchar(10) DEFAULT NULL,
+   `report_skip` varchar(10) DEFAULT NULL,
+   `report_error` varchar(10) DEFAULT NULL,
+   `report_failure` varchar(10) DEFAULT NULL,
+   `report_url` varchar(100) DEFAULT NULL,
+   `report_execution_time` varchar(45) DEFAULT NULL,
+   `interface_auto_reportcol` varchar(45) DEFAULT NULL,
+   `report_name` varchar(45) DEFAULT NULL,
+   `name` varchar(45) DEFAULT NULL,
+   PRIMARY KEY (`id`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8
