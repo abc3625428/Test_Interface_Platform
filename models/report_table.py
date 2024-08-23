@@ -1,12 +1,5 @@
 from models import db
 
-import datetime
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, UniqueConstraint, Index,BigInteger
-
-
-
 # InterfaceAutoReport
 class InterfaceAutoReport(db.Model):
 
@@ -24,3 +17,18 @@ class InterfaceAutoReport(db.Model):
     report_execution_time = db.Column(db.String(45))
     interface_auto_reportcol = db.Column(db.String(45))
     report_name = db.Column(db.String(45))
+
+
+# AllAutoReport
+class AllAutoReport(db.Model):
+
+    __tablename__ = 'all_auto_result'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    report_class = db.Column(db.Integer)
+    result = db.Column(db.String(10))
+    name = db.Column(db.String(10))
+    all_result = db.Column(db.Integer)
+    pass_result = db.Column(db.Integer)
+
+

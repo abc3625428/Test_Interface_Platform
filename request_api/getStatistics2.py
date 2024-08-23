@@ -1,13 +1,9 @@
-from flask import request,jsonify,render_template
 from flask_restful import Resource
-from flask_restful.reqparse import RequestParser
 import log
 
-from models.user import db,UserAccountData
+from models.questing_table import AllQuestingReport
 from models import RoutingSqlAlchemy
-import parser
-from flask import current_app
-from get_token import generate_token
+
 
 logger = log.getLogger('trace')
 
@@ -17,21 +13,33 @@ class GETSTATISTICS2(Resource):
 
     def get(self):
 
+        con = c.session()
+
+        classCount0 = con.query(AllQuestingReport).filter(AllQuestingReport.question_class == 0).count()
+        classCount1 = con.query(AllQuestingReport).filter(AllQuestingReport.question_class == 1).count()
+        classCount2 = con.query(AllQuestingReport).filter(AllQuestingReport.question_class == 2).count()
+        classCount3 = con.query(AllQuestingReport).filter(AllQuestingReport.question_class == 3).count()
+
+        levelCount0 = con.query(AllQuestingReport).filter(AllQuestingReport.question_level == 0).count()
+        levelCount1 = con.query(AllQuestingReport).filter(AllQuestingReport.question_level == 1).count()
+        levelCount2 = con.query(AllQuestingReport).filter(AllQuestingReport.question_level == 2).count()
+        levelCount3 = con.query(AllQuestingReport).filter(AllQuestingReport.question_level == 3).count()
+
 
         result = {
 
             "goods":[
-            {"label": "Interface","value": 140},
-            {"label": "策略问题", "value": 30},
-            {"label": "性能问题", "value": 50},
-            {"label": "全部问题", "value": 60}
+            {"label": "接口问题","value": classCount0},
+            {"label": "策略问题", "value": classCount1},
+            {"label": "性能问题", "value": classCount2},
+            {"label": "客户端问题", "value": classCount3}
             ],
 
             "order":[
-            {"label": "总错误", "value": 140},
-            {"label": "特殊问题", "value": 30},
-            {"label": "严重问题", "value": 50},
-            {"label": "一般问题", "value": 60}
+            {"label": "最高级问题", "value": levelCount0},
+            {"label": "阻塞性问题", "value": levelCount1},
+            {"label": "流程性问题", "value": levelCount2},
+            {"label": "一般性问题", "value": levelCount3}
             ]
 
         }

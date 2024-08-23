@@ -22,3 +22,19 @@ def filePath(fileDir="data",fileName="data.xlsx"):
     :return: 返回
     '''
     return os.path.join(os.path.dirname(os.path.dirname(__file__)),fileDir,fileName)
+
+def filePath_model(fileDir="data",fileName="rd_model.xlsx"):
+    '''
+    :param fileDir: 目录
+    :param fileName: 文件名称
+    :return: 返回
+    '''
+    return os.path.join(os.path.dirname(os.path.dirname(__file__)),fileDir,fileName)
+
+def wt_filePath_model(fileDir="data",fileName="wt_model.xlsx"):
+    '''
+    :param fileDir: 目录
+    :param fileName: 文件名称
+    :return: 返回
+    '''
+    return os.path.join(os.path.dirname(os.path.dirname(__file__)),fileDir,fileName)

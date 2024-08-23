@@ -48,13 +48,22 @@ def create_app(config, enable_config_file=False):
     # from middlewares import jwt_authentication
     # app.before_request(jwt_authentication)
 
-    # 注册用户模块蓝图
+    # 用户模块蓝图
     from request_api import user_bp,user_data,report
     app.register_blueprint(user_bp)
     app.register_blueprint(user_data)
     app.register_blueprint(report)
 
-    # # 定期任务启动
+    # 缺陷模块蓝图
+    from request_api.question import question_bp
+    app.register_blueprint(question_bp)
+
+    # 数据模块蓝图
+    from request_api.database import data_bp
+    app.register_blueprint(data_bp)
+
+
+    # 定期任务启动
 
     #解决请求跨域
     from flask_cors import CORS

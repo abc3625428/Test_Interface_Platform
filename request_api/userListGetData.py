@@ -1,7 +1,3 @@
-
-
-
-
 from flask import request,jsonify,render_template
 from flask_restful import Resource
 from flask_restful.reqparse import RequestParser
