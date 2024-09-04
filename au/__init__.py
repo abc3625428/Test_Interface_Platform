@@ -62,6 +62,9 @@ def create_app(config, enable_config_file=False):
     from request_api.database import data_bp
     app.register_blueprint(data_bp)
 
+    #接口测试蓝图
+    from request_api.interface import interface_bp
+    app.register_blueprint(interface_bp)
 
     # 定期任务启动
 
