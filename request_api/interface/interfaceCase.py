@@ -17,10 +17,10 @@ class GEAINTERFACEDATA(Resource):
 
         if currentPage is None:
             page = 1
-            per_page = 10
+            per_page = 20
         else:
             page = int(currentPage)
-            per_page = 10
+            per_page = 20
 
         search_keyword =  request.args.get('keyword')
         print(search_keyword)
@@ -106,7 +106,7 @@ class INTERFACE_ADD(Resource):
         request_head = params.get('request_head')
         target_key = params.get('target_key')
 
-        modification_time =  datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        modification_time =  datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         is_valid = params.get('is_valid')
         is_execute = params.get('is_execute')

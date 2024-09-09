@@ -23,3 +23,15 @@ class InterfaceAutoCase(db.Model):
     expected_result = db.Column(db.String(45))
     modification_time = db.Column(db.String(45))
     interfacecase_user = db.Column(db.String(45))
+
+
+# InterfaceAutoClass
+class InterfaceAutoClass(db.Model):
+
+    __tablename__ = 'interfacecase_class'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(45))
+    interface_classcol = db.Column(db.String(45))
+    time = db.Column(db.String(45))
+

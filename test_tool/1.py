@@ -1,16 +1,30 @@
-data = {'': 1.0, 'dataset': 'houyi_jobname', 'ersion': 'f2b634', 'etric': 'accuracy', 'ode': 'gen', 'vllm': 0.75}
+def remove_nested_brackets(input_string):
+    stack = []
+    output_parts = []
+
+    for char in input_string:
+
+        if char == '(':
+
+            if stack.count('(') > 0:
+                stack.append(char)
+            else:
+                stack.append(char)
+                output_parts.append(char)
+
+        elif char == ')':
+            if stack:
+                stack.pop()
+                if stack.count('(') == 1:
+                    output_parts.append(char)
+                    stack.pop()
+            else:
+                pass
+        else:
+            output_parts.append(char)
 
 
+    return ''.join(output_parts)
 
-# result = {}
-# for item in data:
-#     dataset = item['dataset']
-#     if dataset not in result:
-#         result[dataset] = []
-#     result[dataset].append(item)
-
-
-import json
-
-s = str(json.dumps(data))
-print(s)
+input_string = "(1,(2,((3,4)),5,((6,7),8"
+print(remove_nested_brackets(input_string))
